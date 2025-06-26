@@ -1,0 +1,75 @@
+import pandas as pd
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import jieba
+import openpyxl
+
+
+
+path = "携程.xlsx"
+dat = pd.read_excel(path, sheet_name='Sheet1')
+st=''
+
+u=''
+for i in range(len(dat)):
+
+        try:
+            u += dat.iloc[i,2]+'\n'
+        except:
+            pass
+
+gg=u
+# img=imageio.imread("1.png")
+cut_text =jieba.cut(gg)#jieba分词
+
+data={}
+fc=''
+with open('data.txt', 'w') as file:
+    stwlist = [line.strip() for line in open( 'stoplist.txt',encoding='utf-8').readlines()]#读取去停用词
+    for i in cut_text:
+
+
+        if i not in stwlist:
+          if len(i)>1:
+            fc += i + ' '
+            if i in data:
+
+                data[i]+=1
+            else:
+                data[i]=1
+    hi=list(data.items())#list化
+    hi.sort(key=lambda x:x[1],reverse=True)#排序
+    gg=''
+    wb00 = openpyxl.Workbook()  # 创建一个Excel表
+    s = wb00.active
+    s.title = '词频'
+    s['A1'] = '词语'
+    s['B1'] = '词频'
+    for k in range(200):#取前100个
+       q = hi[k][0]
+       q1=hi[k][1]
+
+       gg=gg+q+'\n'
+       dl = [q, q1]
+       s.append(dl)
+    wb00.save(f'词频.xlsx')
+    # 建立颜色数组，可更改颜色
+    color_list=['#FF0000','#FFCC00','#FF9933']#'#FFCC00','#FF9933','#FF0000'
+    print(gg)
+    #调用
+    # colormap=colors.ListedColormap(color_list)
+
+    wordcloud = WordCloud(font_path="msyh.ttc", background_color='white', # 背景色为白色
+                          height=800, # 高度设置为400
+                          width=800, # 宽度设置为800
+                          scale=15, # 长宽拉伸程度程度设置为20
+                          # colormap=colormap,  # 设置文字颜色
+                          prefer_horizontal=0.9999,
+                          max_font_size=100
+                          ).generate(gg)
+
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    plt.show()
+    wordcloud.to_file(f"词云图.png")
+    file.write(fc)
